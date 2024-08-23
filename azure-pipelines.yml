@@ -1,0 +1,50 @@
+# Node.js with Angular
+# Build a Node.js project that uses Angular.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+trigger:
+- master/WayfindingAdmin
+
+pool:
+  vmImage: windows-2019
+
+variables:
+  solutionFolder: 'WayfindingAdmin'
+  publishPath: 'WayfindingAdmin\dist\WayfindingAdmin'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '16.14.0'
+  displayName: 'Install Node.js 16.14.0'
+
+- task: CmdLine@2
+  inputs:
+    script: |
+      cd $(solutionFolder)
+      npm install
+    workingDirectory: '$(Build.SourcesDirectory)'
+  displayName: 'install packages'
+- task: CmdLine@2
+  inputs:
+    script: |
+      cd $(solutionFolder)
+      npm run build
+    workingDirectory: '$(Build.SourcesDirectory)'
+  displayName: 'npm run build'
+
+- task: CopyFiles@2
+  inputs:
+    sourceFolder: '$(System.DefaultWorkingDirectory)\$(publishPath)'
+    contents: '**'
+    targetFolder: '$(Build.ArtifactStagingDirectory)'
+  displayName: 'Copy project files'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
